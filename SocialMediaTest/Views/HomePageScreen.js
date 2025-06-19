@@ -6,127 +6,154 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { subscribeToPosts, likePost } from "../Controllers/PostController";
+import { subscribeToPosts } from "../Controllers/PostController";
 import { AntDesign, Feather } from "@expo/vector-icons";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
 
 export default function HomePageScreen({ navigation }) {
   const [posts, setPosts] = useState([]);
   const [userId, setUserId] = useState(null);
+  const [profilePic, setProfilePic] = useState(null);
 
-  useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (currentUser) setUserId(currentUser.uid);
+ useEffect(() => {
+  const currentUser = auth.currentUser;
+  if (!currentUser) return;
 
-    const unsubscribe = subscribeToPosts(async (rawPosts) => {
-      const enrichedPosts = await Promise.all(
-        rawPosts.map(async (post) => {
-          try {
-            const userRef = doc(db, "users", post.uid);
-            const userSnap = await getDoc(userRef);
+  const uid = currentUser.uid;
+  setUserId(uid);
 
-            if (userSnap.exists()) {
-              const userData = userSnap.data();
+  // Real-time listener for profilePic updates
+  const userRef = doc(db, "users", uid);
+  const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+    if (docSnap.exists()) {
+      setProfilePic(docSnap.data().profilePic || null);
+    }
+  });
+
+  const fetchFriendsAndSubscribe = async () => {
+    try {
+      const friendDoc = await getDoc(doc(db, "friends", uid));
+      const friendUIDs = friendDoc.exists() ? friendDoc.data().friends || [] : [];
+
+      const allowedUIDs = [...friendUIDs, uid];
+
+      const unsubscribePosts = subscribeToPosts(allowedUIDs, async (rawPosts) => {
+        const enriched = await Promise.all(
+          rawPosts.map(async (post) => {
+            try {
+              const userSnap = await getDoc(doc(db, "users", post.uid));
+              const userData = userSnap.exists() ? userSnap.data() : {};
               return {
                 ...post,
                 fullName: userData.fullName || "Unknown User",
                 profilePic: userData.profilePic || null,
               };
+            } catch {
+              return { ...post, fullName: "Unknown User", profilePic: null };
             }
-          } catch (err) {
-            console.error("Error fetching user:", err);
-          }
+          })
+        );
+        setPosts(enriched);
+      });
 
-          return {
-            ...post,
-            fullName: "Unknown User",
-            profilePic: null,
-          };
-        })
-      );
+      return unsubscribePosts;
+    } catch (err) {
+      console.error("Error fetching friends or posts:", err);
+    }
+  };
 
-      setPosts(enrichedPosts);
-    });
+  const unsubscribePromise = fetchFriendsAndSubscribe();
 
-    return () => unsubscribe();
-  }, []);
+  return () => {
+    unsubscribeUser(); // Stop listening for profile changes
+    unsubscribePromise.then((unsub) => unsub && unsub()); // Stop listening for posts
+  };
+}, []);
+
 
   const handleLike = async (postId) => {
     try {
-      await likePost(postId); // toggles like
+      const { likePost } = await import("../Controllers/PostController");
+      await likePost(postId);
     } catch (err) {
       console.error("Like failed:", err);
     }
   };
 
+  const handleCommentPress = (postId) => {
+    navigation.navigate("Comments", { postId });
+  };
+
+  const handleProfilePress = () => {
+    navigation.navigate("Profile");
+  };
+
   return (
-    <LinearGradient
-      colors={["#8EFBE1", "#BDFBED", "#EDF9F5", "#F8F8F8"]}
-      style={styles.mainContainer}
-    >
+    <SafeAreaView style={{ flex: 1 }}>
+      <LinearGradient
+        colors={["#8EFBE1", "#BDFBED", "#EDF9F5", "#F8F8F8"]}
+        style={styles.mainContainer}
+      >
+        <TouchableOpacity style={styles.profileBubble} onPress={handleProfilePress}>
+          {profilePic ? (
+            <Image source={{ uri: profilePic }} style={styles.bubbleImage} />
+          ) : (
+            <View style={styles.bubblePlaceholder} />
+          )}
+        </TouchableOpacity>
 
-      
+        <ScrollView contentContainerStyle={styles.feed}>
+          {posts.map((post) => {
+            const likedByUser = post.likedBy?.includes(userId);
+            return (
+              <View key={post.id} style={styles.postCard}>
+                {/* User Info */}
+                <View style={styles.userRow}>
+                  {post.profilePic ? (
+                    <Image source={{ uri: post.profilePic }} style={styles.profilePic} />
+                  ) : (
+                    <View style={styles.placeholderPic} />
+                  )}
+                  <Text style={styles.userName}>{post.fullName}</Text>
+                </View>
 
-
-
-      
-
-
-
-      <ScrollView contentContainerStyle={styles.feed}>
-        {posts.map((post) => {
-          const likedByUser = post.likedBy?.includes(userId);
-
-          return (
-            <View key={post.id} style={styles.postCard}>
-              {/* User Info Row */}
-              <View style={styles.userRow}>
-                {post.profilePic ? (
-                  <Image
-                    source={{ uri: post.profilePic }}
-                    style={styles.profilePic}
-                  />
-                ) : (
-                  <View style={styles.placeholderPic} />
+                {post.imageLink && (
+                  <Image source={{ uri: post.imageLink }} style={styles.image} />
                 )}
-                <Text style={styles.userName}>
-                  {post.fullName || "Unknown User"}
-                </Text>
+                <Text style={styles.text}>{post.postContent}</Text>
+
+                {/* Actions */}
+                <View style={styles.actions}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => handleLike(post.id)}
+                  >
+                    <AntDesign
+                      name={likedByUser ? "like1" : "like2"}
+                      size={20}
+                      color={likedByUser ? "#00BFA6" : "#333"}
+                    />
+                    <Text style={styles.count}>{post.likes}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => handleCommentPress(post.id)}
+                  >
+                    <Feather name="message-circle" size={20} color="#333" />
+                    <Text style={styles.count}>{post.comments?.length || 0}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-
-              {/* Post Image */}
-              {post.imageLink ? (
-                <Image source={{ uri: post.imageLink }} style={styles.image} />
-              ) : null}
-
-              {/* Post Text */}
-              <Text style={styles.text}>{post.postContent}</Text>
-
-              {/* Like & Comment Buttons */}
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleLike(post.id)}
-                >
-                  <AntDesign
-                    name={likedByUser ? "like1" : "like2"}
-                    size={20}
-                    color={likedByUser ? "#00BFA6" : "#333"}
-                  />
-                  <Text style={styles.count}>{post.likes}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
-                  <Feather name="message-circle" size={20} color="#333" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        })}
-      </ScrollView>
-    </LinearGradient>
+            );
+          })}
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
@@ -136,9 +163,27 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   feed: {
-    paddingVertical: 20,
+    paddingVertical: 100,
     paddingHorizontal: 10,
     alignItems: "center",
+  },
+  profileBubble: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    zIndex: 10,
+    paddingTop:20,
+  },
+  bubbleImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+  },
+  bubblePlaceholder: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#ccc",
   },
   postCard: {
     backgroundColor: "#fff",

@@ -10,8 +10,10 @@ import {
 import MainScreen from './Views/MainScreen';
 import LogInScreen from './Views/LogInScreen';
 import SignUpScreen from './Views/SignUpScreen';
-import HomeTabs from './Views/HomeTabs'; // <-- use tabs, not single screen
-import CreatePostScreen from './Views/CreatePostScreen'; // <-- create this next
+import HomeTabs from './Views/HomeTabs'; 
+import CreatePostScreen from './Views/CreatePostScreen'; 
+import CommentsScreen from './Views/CommentsScreen';
+import ProfilePageScreen from './Views/ProfilePageScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,6 +39,8 @@ export default function App() {
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="Home" component={HomeTabs} /> 
         <Stack.Screen name="CreatePost" component={CreatePostScreen} />
+        <Stack.Screen name="Comments" component={CommentsScreen}/>
+        <Stack.Screen name="Profile" component={ProfilePageScreen}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

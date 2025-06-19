@@ -10,12 +10,10 @@ import {
   arrayUnion,
   arrayRemove,
   doc,
-  setDoc,
   getDoc,
 } from "firebase/firestore";
 import axios from "axios";
 
-// Upload to Cloudinary
 export const uploadToCloudinary = async (imageUri) => {
   const data = new FormData();
   data.append("file", {
@@ -44,7 +42,7 @@ export const uploadToCloudinary = async (imageUri) => {
   }
 };
 
-// Create Post
+// 📝 Create Post
 export const createPost = async (uid, postContent, imageUri) => {
   try {
     const imageLink = await uploadToCloudinary(imageUri);
@@ -62,8 +60,8 @@ export const createPost = async (uid, postContent, imageUri) => {
       postContent,
       imageLink,
       likes: 0,
-      likedBy: [], // Ensure field is initialized
-      comments: [],
+      likedBy: [], // For like toggle tracking
+      comments: [], // To support comment count and future features
       timestamp: serverTimestamp(),
     });
 
@@ -74,7 +72,6 @@ export const createPost = async (uid, postContent, imageUri) => {
   }
 };
 
-// Toggle Like
 export const likePost = async (postId) => {
   try {
     const userId = auth.currentUser.uid;
@@ -86,13 +83,12 @@ export const likePost = async (postId) => {
       const likedBy = postData.likedBy || [];
 
       if (likedBy.includes(userId)) {
-        // Unlike
+        // 🔄 Unlike
         await updateDoc(postRef, {
           likedBy: arrayRemove(userId),
           likes: postData.likes > 0 ? postData.likes - 1 : 0,
         });
       } else {
-        // Like
         await updateDoc(postRef, {
           likedBy: arrayUnion(userId),
           likes: postData.likes + 1,
@@ -105,18 +101,19 @@ export const likePost = async (postId) => {
   }
 };
 
-// Real-time listener for posts
-export const subscribeToPosts = (callback) => {
+// 🔁 Real-time listener for posts
+export const subscribeToPosts = (uids = [], callback) => {
   const postsRef = collection(db, "posts");
   const q = query(postsRef, orderBy("timestamp", "desc"));
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const posts = snapshot.docs.map((doc) => ({
+  return onSnapshot(q, (snapshot) => {
+    const allPosts = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
-    callback(posts);
-  });
 
-  return unsubscribe;
+    const filtered = allPosts.filter((post) => uids.includes(post.uid));
+    callback(filtered);
+  });
 };
+
