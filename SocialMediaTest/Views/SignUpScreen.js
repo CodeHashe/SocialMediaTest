@@ -1,6 +1,18 @@
 import { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { View, StyleSheet, TextInput, Text, KeyboardAvoidingView, Platform, Alert } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
 import Button from "./Button.js";
 import { signUpUser } from "../Controllers/SignUpController";
 
@@ -9,14 +21,19 @@ export default function SignUpScreen({ navigation }) {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password) {
       return Alert.alert("Error", "Please fill in all fields.");
     }
 
+    setLoading(true);
+
     const fullName = `${firstName} ${lastName}`;
     const { success, message } = await signUpUser(email, password, fullName);
+
+    setLoading(false);
 
     if (success) {
       Alert.alert("Success", message, [
@@ -33,78 +50,104 @@ export default function SignUpScreen({ navigation }) {
       style={styles.gradient}
     >
       <KeyboardAvoidingView
+        style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+        keyboardVerticalOffset={60}
       >
-        <Text style={styles.heading}>Sign Up</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.container}>
+              <Text style={styles.heading}>Sign Up</Text>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>First Name</Text>
-          <TextInput
-            placeholder="Enter your First Name"
-            placeholderTextColor="#aaa"
-            style={styles.input}
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-        </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>First Name</Text>
+                <TextInput
+                  placeholder="Enter your First Name"
+                  placeholderTextColor="#aaa"
+                  style={styles.input}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  editable={!loading}
+                />
+              </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Last Name</Text>
-          <TextInput
-            placeholder="Enter your Last Name"
-            placeholderTextColor="#aaa"
-            style={styles.input}
-            value={lastName}
-            onChangeText={setLastName}
-          />
-        </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Last Name</Text>
+                <TextInput
+                  placeholder="Enter your Last Name"
+                  placeholderTextColor="#aaa"
+                  style={styles.input}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  editable={!loading}
+                />
+              </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            placeholder="Enter your Email"
-            placeholderTextColor="#aaa"
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  placeholder="Enter your Email"
+                  placeholderTextColor="#aaa"
+                  style={styles.input}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                  editable={!loading}
+                />
+              </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            placeholder="Enter your Password"
-            placeholderTextColor="#aaa"
-            style={styles.input}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-        </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  placeholder="Enter your Password"
+                  placeholderTextColor="#aaa"
+                  style={styles.input}
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  editable={!loading}
+                />
+              </View>
 
-        <View style={styles.buttonContainer}>
-          <Button
-            text="Sign Up"
-            textColor="white"
-            buttonColor="#a8fdea"
-            buttonEvent={handleSignUp}
-          />
-        </View>
+              <View style={styles.buttonContainer}>
+                {loading ? (
+                  <>
+                    <ActivityIndicator size="large" color="#00c7be" />
+                    <Text style={styles.loadingText}>Signing you up...</Text>
+                  </>
+                ) : (
+                  <Button
+                    text="Sign Up"
+                    textColor="white"
+                    buttonColor="#a8fdea"
+                    buttonEvent={handleSignUp}
+                  />
+                )}
+              </View>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </LinearGradient>
   );
 }
 
-
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
-    width: "100%",
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 20,
   },
   container: {
     width: "85%",
@@ -134,18 +177,24 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-  backgroundColor: "#fff",
-  borderRadius: 10,
-  paddingVertical: 10,
-  paddingHorizontal: 15,
-  fontSize: 14,
-  fontFamily: "Poppins_400Regular", 
-  color: "#000",
-  borderColor: "#ccc",
-  borderWidth: 1,
-},
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: "#000",
+    borderColor: "#ccc",
+    borderWidth: 1,
+  },
   buttonContainer: {
     marginTop: 30,
     alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: "#333",
   },
 });

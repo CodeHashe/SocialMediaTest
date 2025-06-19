@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomePageScreen from './HomePageScreen';
+import CustomTabBar from "./CustomTabBar";
 
 const Tab = createBottomTabNavigator();
 
@@ -19,65 +20,23 @@ function CreatePostScreen() {
   return <View style={styles.center}><Text>Create Post</Text></View>;
 }
 
-export default function HomeTabs({ navigation }) {
+export default function HomeTabs() {
   return (
-    <View style={styles.navContainer}>
-      <View style={styles.tabWrapper}>
-        <Tab.Navigator
-          screenOptions={{
-            tabBarShowLabel: false,
-            headerShown: false,
-            tabBarStyle: styles.tabBarStyle,
-          }}
-        >
-          <Tab.Screen
-            name="Home"
-            component={HomePageScreen}
-            options={{
-              tabBarIcon: ({ focused }) => (
-                <Ionicons name="home-outline" size={20} color={focused ? '#00BFA6' : '#ccc'} />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Search"
-            component={SearchScreen}
-            options={{
-              tabBarIcon: ({ focused }) => (
-                <Ionicons name="search-outline" size={20} color={focused ? '#00BFA6' : '#ccc'} />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Camera"
-            component={CameraScreen}
-            options={{
-              tabBarIcon: ({ focused }) => (
-                <Ionicons name="camera-outline" size={20} color={focused ? '#00BFA6' : '#ccc'} />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Friends"
-            component={FriendsScreen}
-            options={{
-              tabBarIcon: ({ focused }) => (
-                <Ionicons name="person-add-outline" size={20} color={focused ? '#00BFA6' : '#ccc'} />
-              ),
-            }}
-          />
-        </Tab.Navigator>
-      </View>
-      
-      <TouchableOpacity
-        style={styles.sidePlusButton}
-        onPress={() => navigation.navigate('CreatePost')}
-      >
-        <Text style={styles.plusText}>+</Text>
-      </TouchableOpacity>
-    </View>
+   <Tab.Navigator
+  screenOptions={{
+    headerShown: false,
+  }}
+  tabBar={(props) => <CustomTabBar {...props} />}
+>
+  <Tab.Screen name="Home" component={HomePageScreen} />
+  <Tab.Screen name="Search" component={SearchScreen} />
+  <Tab.Screen name="Camera" component={CameraScreen} />
+  <Tab.Screen name="Friends" component={FriendsScreen} />
+  </Tab.Navigator>
+
   );
 }
+
 
 const styles = StyleSheet.create({
   navContainer: {

@@ -1,18 +1,37 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { View, StyleSheet, TextInput, Text, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import Button from "./Button.js";
-import { signInUser } from "../Controllers/SignInController.js"; // import controller
+import { signInUser } from "../Controllers/SignInController.js";
 
 export default function LogInScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      return Alert.alert("Error", "Please enter email and password.");
+    }
+
+    setLoading(true);
+
     const result = await signInUser(email, password);
+
+    setLoading(false);
+
     if (result.success) {
       Alert.alert("Login Successful", `Welcome back ${result.user.email}`);
-      navigation.navigate("Home")
+      navigation.navigate("Home");
     } else {
       Alert.alert("Login Failed", result.error);
     }
@@ -38,6 +57,7 @@ export default function LogInScreen({ navigation }) {
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
+            editable={!loading}
           />
         </View>
 
@@ -50,23 +70,29 @@ export default function LogInScreen({ navigation }) {
             secureTextEntry
             value={password}
             onChangeText={setPassword}
+            editable={!loading}
           />
         </View>
 
         <View style={styles.buttonContainer}>
-          <Button
-            text="Log In"
-            textColor="white"
-            buttonColor="#a8fdea"
-            buttonEvent={handleLogin}
-          />
+          {loading ? (
+            <>
+              <ActivityIndicator size="large" color="#00c7be" />
+              <Text style={styles.loadingText}>Signing you in...</Text>
+            </>
+          ) : (
+            <Button
+              text="Log In"
+              textColor="white"
+              buttonColor="#a8fdea"
+              buttonEvent={handleLogin}
+            />
+          )}
         </View>
       </KeyboardAvoidingView>
     </LinearGradient>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   gradient: {
@@ -103,18 +129,24 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-  backgroundColor: "#fff",
-  borderRadius: 10,
-  paddingVertical: 10,
-  paddingHorizontal: 15,
-  fontSize: 14,
-  fontFamily: "Poppins_400Regular", // <-- switch here
-  color: "#000",
-  borderColor: "#ccc",
-  borderWidth: 1,
-},
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: "#000",
+    borderColor: "#ccc",
+    borderWidth: 1,
+  },
   buttonContainer: {
     marginTop: 30,
     alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: "#333",
   },
 });

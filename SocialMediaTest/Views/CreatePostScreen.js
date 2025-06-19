@@ -7,12 +7,16 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { createPost } from '../Controllers/PostController'; // your controller
+import { auth } from '../firebaseConfig'; // your Firebase setup
 
 export default function CreatePostScreen() {
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -27,16 +31,32 @@ export default function CreatePostScreen() {
     }
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (text.trim() === '') {
       Alert.alert('Error', 'Post cannot be empty');
       return;
     }
 
-    // TODO: Upload to Firestore
-    Alert.alert('Posted!', 'Your post has been created.');
-    setText('');
-    setImage(null);
+    setLoading(true);
+
+    try {
+      const uid = auth.currentUser?.uid;
+      if (!uid) throw new Error("User not authenticated");
+
+      const result = await createPost(uid, text, image);
+
+      if (result.success) {
+        Alert.alert('Posted!', 'Your post has been created.');
+        setText('');
+        setImage(null);
+      } else {
+        Alert.alert('Error', result.error || 'Something went wrong.');
+      }
+    } catch (err) {
+      Alert.alert('Error', err.message);
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -50,18 +70,23 @@ export default function CreatePostScreen() {
         placeholderTextColor="#999"
         value={text}
         onChangeText={setText}
+        editable={!loading}
       />
 
       {image && (
         <Image source={{ uri: image }} style={styles.imagePreview} />
       )}
 
-      <TouchableOpacity onPress={pickImage} style={styles.pickButton}>
-        <Text style={styles.pickText}>Pick Image</Text>
+      <TouchableOpacity onPress={pickImage} style={styles.pickButton} disabled={loading}>
+        <Text style={styles.pickText}>{loading ? 'Uploading...' : 'Pick Image'}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handlePost} style={styles.postButton}>
-        <Text style={styles.postText}>Post</Text>
+      <TouchableOpacity onPress={handlePost} style={styles.postButton} disabled={loading}>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.postText}>Post</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
