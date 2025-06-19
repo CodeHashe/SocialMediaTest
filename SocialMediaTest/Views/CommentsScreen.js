@@ -69,15 +69,15 @@ export default function CommentsScreen() {
     if (!user) return;
 
     try {
-      // Save as `text`
+      
       const commentRef = await addDoc(collection(db, "comments"), {
         postId,
         uid: user.uid,
-        text: newComment, // key is `text` instead of `content`
+        text: newComment, 
         timestamp: serverTimestamp(),
       });
 
-      // Update post's `comments` array
+      
       const postRef = doc(db, "posts", postId);
       await updateDoc(postRef, {
         comments: arrayUnion(commentRef.id),
@@ -125,7 +125,7 @@ export default function CommentsScreen() {
         data={comments}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 20, paddingBottom: 80 }} // Leave space for input
+        contentContainerStyle={{ padding: 20, paddingBottom: 80 }} 
       />
 
       <View style={styles.inputContainer}>

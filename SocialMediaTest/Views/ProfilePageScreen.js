@@ -22,7 +22,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 
-export default function ProfilePageScreen() {
+export default function ProfilePageScreen({ navigation }) {
   const [userData, setUserData] = useState({});
   const [posts, setPosts] = useState([]);
   const [followerCount, setFollowerCount] = useState(0);
@@ -110,6 +110,18 @@ export default function ProfilePageScreen() {
     }
   };
 
+  const signOutUser = async () => {
+    try {
+      await auth.signOut();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Main" }],
+      });
+    } catch (error) {
+      Alert.alert("Sign Out Failed", error.message);
+    }
+  };
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <TouchableOpacity onPress={pickAndUploadImage}>
@@ -135,6 +147,10 @@ export default function ProfilePageScreen() {
           <Text style={styles.statLabel}>Following</Text>
         </View>
       </View>
+
+      <TouchableOpacity onPress={signOutUser} style={styles.signOutButton}>
+        <Text style={styles.signOutText}>Sign Out</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -247,5 +263,17 @@ const styles = StyleSheet.create({
   postTimestamp: {
     fontSize: 12,
     color: "#888",
+  },
+  signOutButton: {
+    marginTop: 15,
+    backgroundColor: "#ff6666",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  signOutText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });

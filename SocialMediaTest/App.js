@@ -6,6 +6,9 @@ import {
   Poppins_400Regular,
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
+import { useEffect, useState } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebaseConfig';
 
 import MainScreen from './Views/MainScreen';
 import LogInScreen from './Views/LogInScreen';
@@ -27,20 +30,41 @@ export default function App() {
     Poppins_700Bold,
   });
 
-  if (!fontsLoaded) {
+  const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthChecked(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (!fontsLoaded || !authChecked) {
     return <AppLoading />;
   }
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Main" component={MainScreen} />
-        <Stack.Screen name="LogIn" component={LogInScreen} />
-        <Stack.Screen name="SignUp" component={SignUpScreen} />
-        <Stack.Screen name="Home" component={HomeTabs} /> 
-        <Stack.Screen name="CreatePost" component={CreatePostScreen} />
-        <Stack.Screen name="Comments" component={CommentsScreen}/>
-        <Stack.Screen name="Profile" component={ProfilePageScreen}/>
+        {user ? (
+          
+          <>
+            <Stack.Screen name="Home" component={HomeTabs} />
+            <Stack.Screen name="CreatePost" component={CreatePostScreen} />
+            <Stack.Screen name="Comments" component={CommentsScreen} />
+            <Stack.Screen name="Profile" component={ProfilePageScreen} />
+          </>
+        ) : (
+          
+          <>
+            <Stack.Screen name="Main" component={MainScreen} />
+            <Stack.Screen name="LogIn" component={LogInScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

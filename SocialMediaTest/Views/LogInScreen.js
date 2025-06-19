@@ -31,7 +31,12 @@ export default function LogInScreen({ navigation }) {
 
     if (result.success) {
       Alert.alert("Login Successful", `Welcome back ${result.user.email}`);
-      navigation.navigate("Home");
+
+      
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
     } else {
       Alert.alert("Login Failed", result.error);
     }
@@ -39,7 +44,7 @@ export default function LogInScreen({ navigation }) {
 
   return (
     <LinearGradient
-      colors={['#8EFBE1', '#BDFBED', '#EDF9F5', '#F8F8F8']}
+      colors={["#8EFBE1", "#BDFBED", "#EDF9F5", "#F8F8F8"]}
       style={styles.gradient}
     >
       <KeyboardAvoidingView

@@ -10,8 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { createPost } from '../Controllers/PostController'; // your controller
-import { auth } from '../firebaseConfig'; // your Firebase setup
+import { createPost } from '../Controllers/PostController'; 
+import { auth } from '../firebaseConfig'; 
 
 export default function CreatePostScreen() {
   const [text, setText] = useState('');

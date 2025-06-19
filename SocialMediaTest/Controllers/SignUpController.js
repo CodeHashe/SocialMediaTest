@@ -4,7 +4,6 @@ import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 
 /**
- * Handles user signup with Firebase Auth & Firestore
  * @param {string} email 
  * @param {string} password 
  * @param {string} fullName
@@ -12,11 +11,11 @@ import { auth, db } from "../firebaseConfig";
  */
 export const signUpUser = async (email, password, fullName) => {
   try {
-    // Firebase Auth signup
+    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Store user profile in "users" collection
+    
     await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       fullName: fullName,
@@ -28,13 +27,13 @@ export const signUpUser = async (email, password, fullName) => {
       profilePic:""
     });
 
-    // Initialize "friends" collection for this user
+    
     await setDoc(doc(db, "friends", user.uid), {
       uid: user.uid,
       friends: [],
     });
 
-    // Initialize "requests" collection for this user
+    
     await setDoc(doc(db, "requests", user.uid), {
       uid: user.uid,
       requests: [],

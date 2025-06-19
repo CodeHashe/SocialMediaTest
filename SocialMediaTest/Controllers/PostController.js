@@ -42,7 +42,7 @@ export const uploadToCloudinary = async (imageUri) => {
   }
 };
 
-// 📝 Create Post
+
 export const createPost = async (uid, postContent, imageUri) => {
   try {
     const imageLink = await uploadToCloudinary(imageUri);
@@ -60,8 +60,8 @@ export const createPost = async (uid, postContent, imageUri) => {
       postContent,
       imageLink,
       likes: 0,
-      likedBy: [], // For like toggle tracking
-      comments: [], // To support comment count and future features
+      likedBy: [],
+      comments: [], 
       timestamp: serverTimestamp(),
     });
 
@@ -83,7 +83,7 @@ export const likePost = async (postId) => {
       const likedBy = postData.likedBy || [];
 
       if (likedBy.includes(userId)) {
-        // 🔄 Unlike
+       
         await updateDoc(postRef, {
           likedBy: arrayRemove(userId),
           likes: postData.likes > 0 ? postData.likes - 1 : 0,
@@ -101,7 +101,7 @@ export const likePost = async (postId) => {
   }
 };
 
-// 🔁 Real-time listener for posts
+
 export const subscribeToPosts = (uids = [], callback) => {
   const postsRef = collection(db, "posts");
   const q = query(postsRef, orderBy("timestamp", "desc"));

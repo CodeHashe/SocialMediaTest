@@ -26,7 +26,7 @@ export default function HomePageScreen({ navigation }) {
   const uid = currentUser.uid;
   setUserId(uid);
 
-  // Real-time listener for profilePic updates
+  
   const userRef = doc(db, "users", uid);
   const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
     if (docSnap.exists()) {
@@ -69,8 +69,8 @@ export default function HomePageScreen({ navigation }) {
   const unsubscribePromise = fetchFriendsAndSubscribe();
 
   return () => {
-    unsubscribeUser(); // Stop listening for profile changes
-    unsubscribePromise.then((unsub) => unsub && unsub()); // Stop listening for posts
+    unsubscribeUser(); 
+    unsubscribePromise.then((unsub) => unsub && unsub()); 
   };
 }, []);
 

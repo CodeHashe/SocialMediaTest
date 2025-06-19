@@ -5,6 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomePageScreen from './HomePageScreen';
 import CustomTabBar from "./CustomTabBar";
 import SearchPageScreen from './SearchPageScreen';
+import RequestsPageScreen from './RequestsPageScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -29,10 +30,10 @@ export default function HomeTabs() {
   }}
   tabBar={(props) => <CustomTabBar {...props} />}
 >
-  <Tab.Screen name="Home" component={HomePageScreen} />
+  <Tab.Screen name="HomePage" component={HomePageScreen} />
   <Tab.Screen name="Search" component={SearchPageScreen} />
   <Tab.Screen name="Camera" component={CameraScreen} />
-  <Tab.Screen name="Friends" component={FriendsScreen} />
+  <Tab.Screen name="Friends" component={RequestsPageScreen} />
   </Tab.Navigator>
 
   );

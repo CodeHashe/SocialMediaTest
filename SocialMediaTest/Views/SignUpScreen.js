@@ -37,7 +37,15 @@ export default function SignUpScreen({ navigation }) {
 
     if (success) {
       Alert.alert("Success", message, [
-        { text: "OK", onPress: () => navigation.navigate("Home") },
+        {
+          text: "OK",
+          onPress: () => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Home" }],
+            });
+          },
+        },
       ]);
     } else {
       Alert.alert("Sign Up Failed", message);
